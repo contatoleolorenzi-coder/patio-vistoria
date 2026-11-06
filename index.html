@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pátio">
+<meta name="theme-color" content="#1747C9">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231747C9'/%3E%3Crect x='20' y='8' width='24' height='48' rx='9' fill='white'/%3E%3C/svg%3E">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Pátio Vistoria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: app de pátio, uma coluna para o polegar; painel → vistoria em 5 passos → laudo. Alto contraste para sol. */
+:root{
+  --chao:#EDF0F3; --cartao:#FFFFFF; --tinta:#132230; --tinta-2:#506170; --linha:#D2D9E0;
+  --acento:#1747C9; --acento-tx:#FFFFFF; --acento-bg:#E3EAFB;
+  --ok:#16794A; --ok-bg:#DFF1E7; --avaria:#C4321F; --avaria-bg:#FBE3DE; --aviso:#9A5B00; --aviso-bg:#FCEFD6;
+  --zona:#DDE3E9; --corpo:#C8D1DA;
+  --placa-bg:#FFFFFF; --placa-faixa:#1747C9; --placa-tx:#101418;
+  --f-disp:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-txt:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --chao:#0E151C; --cartao:#17212B; --tinta:#E7EDF2; --tinta-2:#9AA9B6; --linha:#2A3743;
+  --acento:#7096FF; --acento-tx:#0B1424; --acento-bg:#1B2A4D;
+  --ok:#43C384; --ok-bg:#16301F; --avaria:#FF6E58; --avaria-bg:#3A1C17; --aviso:#EDA845; --aviso-bg:#3A2A12;
+  --zona:#24313D; --corpo:#33414E; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --chao:#0E151C; --cartao:#17212B; --tinta:#E7EDF2; --tinta-2:#9AA9B6; --linha:#2A3743;
+  --acento:#7096FF; --acento-tx:#0B1424; --acento-bg:#1B2A4D;
+  --ok:#43C384; --ok-bg:#16301F; --avaria:#FF6E58; --avaria-bg:#3A1C17; --aviso:#EDA845; --aviso-bg:#3A2A12;
+  --zona:#24313D; --corpo:#33414E; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--chao);color:var(--tinta);font:16px/1.45 var(--f-txt);-webkit-tap-highlight-color:transparent}
+#app{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 120px}
+h1,h2,h3{font-family:var(--f-disp);margin:0;text-wrap:balance;letter-spacing:.01em}
+h1{font-size:28px;font-weight:700} h2{font-size:21px;font-weight:600} h3{font-size:17px;font-weight:600}
+.sub{color:var(--tinta-2);font-size:14px}
+.rotulo{font-family:var(--f-disp);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tinta-2)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--acento);outline-offset:2px}
+.topo{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:8px 14px}
+.pilha{display:flex;flex-direction:column;gap:12px}
+.linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.cartao{background:var(--cartao);border:1px solid var(--linha);border-radius:var(--r);padding:14px}
+.btn{border:0;border-radius:10px;padding:12px 16px;min-height:48px;font-weight:600;background:var(--cartao);border:1px solid var(--linha)}
+.btn.pri{background:var(--acento);color:var(--acento-tx);border-color:transparent}
+.btn.perigo{color:var(--avaria)}
+.btn.lg{width:100%;font-size:17px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.icone{border:1px solid var(--linha);background:var(--cartao);border-radius:10px;min-width:44px;min-height:44px;display:inline-grid;place-items:center;font-size:20px}
+.chip{border:1px solid var(--linha);background:var(--cartao);border-radius:999px;padding:8px 14px;min-height:40px;font-weight:500;font-size:15px}
+.chip[aria-pressed="true"]{background:var(--acento);color:var(--acento-tx);border-color:transparent}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:600;white-space:nowrap}
+.p-ent{background:var(--acento-bg);color:var(--acento)} .p-sai{background:var(--ok-bg);color:var(--ok)}
+.p-av{background:var(--avaria-bg);color:var(--avaria)} .p-pend{background:var(--aviso-bg);color:var(--aviso)}
+.p-ok{background:var(--ok-bg);color:var(--ok)} .p-ex{background:var(--zona);color:var(--tinta-2)}
+/* placa Mercosul */
+.placa{display:inline-flex;flex-direction:column;background:var(--placa-bg);color:var(--placa-tx);border:2px solid #20262c;border-radius:6px;overflow:hidden;min-width:112px;text-align:center;flex:none}
+.placa i{display:block;background:var(--placa-faixa);color:#fff;font:600 8px/12px var(--f-disp);letter-spacing:.3em;font-style:normal}
+.placa b{font:700 22px/30px var(--f-disp);letter-spacing:.08em;padding:0 8px}
+.placa.g b{font-size:34px;line-height:44px} .placa.g i{font-size:10px;line-height:15px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--cartao);border:1px solid var(--linha);border-radius:var(--r);padding:10px 12px}
+.kpi b{display:block;font:700 30px/1.1 var(--f-disp);font-variant-numeric:tabular-nums}
+.kpi span{font-size:13px;color:var(--tinta-2)}
+.kpi.alerta b{color:var(--avaria)}
+.item-v{display:flex;gap:12px;align-items:center;background:var(--cartao);border:1px solid var(--linha);border-radius:var(--r);padding:12px;text-align:left;width:100%}
+.item-v .meio{flex:1;min-width:0}
+.item-v .meio div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.busca{width:100%;border:1px solid var(--linha);background:var(--cartao);border-radius:10px;padding:12px 14px;min-height:48px}
+label.campo{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:15px}
+label.campo input,label.campo textarea,label.campo select{border:1px solid var(--linha);background:var(--cartao);border-radius:10px;padding:12px;min-height:48px;width:100%}
+.grade2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.passos{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--chao);padding-block:8px;z-index:5}
+.passos button{border:0;background:none;padding:4px 0;display:flex;flex-direction:column;gap:6px;align-items:stretch;font:600 12px var(--f-disp);letter-spacing:.04em;text-transform:uppercase;color:var(--tinta-2)}
+.passos button::before{content:"";height:5px;border-radius:3px;background:var(--linha)}
+.passos button.feito::before{background:var(--ok)}
+.passos button[aria-current="step"]{color:var(--tinta)} .passos button[aria-current="step"]::before{background:var(--acento)}
+.comb{display:grid;grid-template-columns:repeat(8,1fr);gap:3px}
+.comb button{height:36px;border:1px solid var(--linha);background:var(--cartao);border-radius:4px;padding:0}
+.comb button.on{background:var(--acento);border-color:transparent}
+.fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.slot{position:relative;display:flex;flex-direction:column;border:2px dashed var(--linha);border-radius:var(--r);background:var(--cartao);overflow:hidden;cursor:pointer;min-height:150px}
+.slot.tem{border-style:solid;border-color:var(--ok)}
+.slot .img{aspect-ratio:4/3;max-width:100%;background:var(--zona) center/cover no-repeat;display:grid;place-items:center;color:var(--tinta-2);font-size:28px}
+.slot .tx{padding:8px 10px;font-size:14px;line-height:1.25}
+.slot .tx b{display:block;font-weight:600}
+.slot input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.barra-prog{height:8px;border-radius:4px;background:var(--linha);overflow:hidden}
+.barra-prog i{display:block;height:100%;background:var(--ok);transition:width .3s}
+.carro-wrap{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center}
+.carro{width:min(100%,300px);height:auto;touch-action:manipulation}
+.carro .corpo{fill:var(--corpo)}
+.carro .z{fill:var(--zona);stroke:var(--cartao);stroke-width:2;transition:fill .15s}
+.carro .z.vidro{fill:var(--acento-bg)}
+.carro.int .z{cursor:pointer} .carro.int .z:hover{fill:var(--acento-bg);stroke:var(--acento)}
+.carro .z.av{fill:var(--avaria-bg);stroke:var(--avaria);stroke-width:2.5}
+.carro .z.novo{fill:var(--avaria);stroke:var(--avaria)}
+.carro .mk circle{fill:var(--avaria)} .carro .mk text{fill:#fff;font:700 13px var(--f-disp)}
+.carro .tl{fill:var(--tinta-2);font:600 10px var(--f-disp);letter-spacing:.12em}
+.av-li{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--linha)}
+.av-li:first-child{border-top:0}
+.av-li .th{width:64px;height:48px;border-radius:8px;background:var(--zona) center/cover;flex:none}
+.av-li .meio{flex:1;min-width:0}
+.check{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--linha)}
+.check:first-child{border-top:0}
+.sn{display:inline-flex;border:1px solid var(--linha);border-radius:10px;overflow:hidden;flex:none}
+.sn button{border:0;background:var(--cartao);padding:8px 14px;min-height:42px;font-weight:600}
+.sn button[aria-pressed="true"].s{background:var(--ok);color:var(--cartao)}
+.sn button[aria-pressed="true"].n{background:var(--avaria);color:var(--cartao)}
+.assin{width:100%;height:170px;border:1px solid var(--linha);border-radius:10px;background:var(--cartao);touch-action:none;display:block}
+.assin-wrap{position:relative}
+.assin-wrap .limpar{position:absolute;top:8px;right:8px}
+.assin-wrap .marca{position:absolute;left:14px;right:14px;bottom:34px;border-bottom:1px dashed var(--linha);pointer-events:none}
+.rodape{position:fixed;left:0;right:0;bottom:0;background:var(--cartao);border-top:1px solid var(--linha);padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));z-index:20}
+.rodape .in{max-width:720px;margin:0 auto;display:flex;gap:10px}
+.rodape .in .btn{flex:1}
+.fab{position:fixed;right:max(16px,calc(env(safe-area-inset-right,0px) + 16px));bottom:calc(20px + env(safe-area-inset-bottom,0px));border-radius:999px;padding:16px 22px;font-size:17px;box-shadow:0 6px 20px rgb(10 25 60 / .28);z-index:20}
+.veu{position:fixed;inset:0;background:rgb(5 12 20 / .5);z-index:30;display:flex;align-items:flex-end;justify-content:center}
+.folha{background:var(--cartao);width:100%;max-width:720px;border-radius:18px 18px 0 0;max-height:88%;overflow:auto;padding-top:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.aviso{border-radius:var(--r);padding:12px 14px;font-size:15px}
+.aviso.av{background:var(--avaria-bg);color:var(--avaria)}
+.aviso.info{background:var(--acento-bg);color:var(--tinta)}
+.aviso.am{background:var(--aviso-bg);color:var(--tinta)}
+.galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.galeria figure{margin:0} .galeria .img{aspect-ratio:4/3;border-radius:8px;background:var(--zona) center/cover;max-width:100%}
+.galeria figcaption{font-size:13px;color:var(--tinta-2);padding-top:4px}
+.dados{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px 16px}
+.dados div span{display:block;font-size:13px;color:var(--tinta-2)} .dados div b{font-weight:600;font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom,0px));background:var(--tinta);color:var(--chao);padding:12px 16px;border-radius:10px;z-index:40;max-width:calc(100% - 32px);font-size:15px}
+.assin-img{max-width:100%;height:80px;background:var(--placa-bg);border-radius:8px;border:1px solid var(--linha)}
+@media (max-width:420px){.grade2{grid-template-columns:1fr}.kpi b{font-size:26px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head><body>
+
+<div id="app"></div>
+<div id="camada"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+"use strict";
+/* ---------- domínio ---------- */
+const FOTOS=[
+  {k:'frente',n:'Frente',d:'Reto, placa legível'},
+  {k:'diant_esq',n:'Dianteira esq. 45°',d:'Canto do motorista'},
+  {k:'diant_dir',n:'Dianteira dir. 45°',d:'Canto do passageiro'},
+  {k:'tras_esq',n:'Traseira esq. 45°',d:'Placa aparecendo'},
+  {k:'tras_dir',n:'Traseira dir. 45°',d:'Placa aparecendo'},
+  {k:'traseira',n:'Traseira',d:'Reto, placa legível'},
+  {k:'painel',n:'Painel ligado',d:'KM e combustível visíveis'},
+  {k:'int_diant',n:'Interior dianteiro',d:'Bancos e console'},
+  {k:'int_tras',n:'Interior traseiro',d:'Bancos e forro'},
+  {k:'motor',n:'Motor',d:'Capô aberto'},
+  {k:'porta_malas',n:'Porta-malas',d:'Com estepe e ferramentas'}
+];
+const Z=(k,n,x,y,w,h,rx,vidro)=>({k,n,x,y,w,h,rx:rx||6,vidro:!!vidro});
+const ESPELHO=(k,n,z)=>Z(k,n,240-z.x-z.w,z.y,z.w,z.h,z.rx);
+const ZL=[
+  Z('paralama_de','Paralama dianteiro esq.',36,58,20,86,8),
+  Z('porta_de','Porta dianteira esq.',34,150,24,92,6),
+  Z('porta_te','Porta traseira esq.',34,246,24,90,6),
+  Z('paralama_te','Paralama traseiro esq.',36,340,20,74,8),
+  Z('retrov_e','Retrovisor esq.',12,150,20,16,4),
+  Z('roda_de','Roda/pneu dianteiro esq.',18,72,14,52,5),
+  Z('roda_te','Roda/pneu traseiro esq.',18,352,14,52,5)
+];
+const ZR=[['paralama_dd','Paralama dianteiro dir.'],['porta_dd','Porta dianteira dir.'],['porta_td','Porta traseira dir.'],['paralama_td','Paralama traseiro dir.'],['retrov_d','Retrovisor dir.'],['roda_dd','Roda/pneu dianteiro dir.'],['roda_td','Roda/pneu traseiro dir.']].map((p,i)=>ESPELHO(p[0],p[1],ZL[i]));
+const ZONAS=[
+  Z('pc_d','Para-choque dianteiro',52,18,136,30,14),
+  Z('capo','Capô',60,52,120,80,10),
+  Z('parabrisa','Para-brisa',64,136,112,38,6,true),
+  Z('teto','Teto',64,178,112,126,6),
+  Z('vidro_tras','Vidro traseiro',64,308,112,32,6,true),
+  Z('tampa','Tampa traseira',60,344,120,68,10),
+  Z('pc_t','Para-choque traseiro',52,416,136,32,14),
+  ...ZL,...ZR
+];
+const ZMAP=Object.fromEntries(ZONAS.map(z=>[z.k,z]));
+const TIPOS_AV=['Risco','Amassado','Trinca/quebra','Pintura','Peça faltando','Desgaste'];
+const GRAV=['Leve','Média','Grave'];
+const ITENS=[['estepe','Estepe'],['macaco','Macaco'],['chave_roda','Chave de roda'],['triangulo','Triângulo'],['chave_reserva','Chave reserva'],['manual','Manual do proprietário'],['crlv','CRLV / documento'],['tapetes','Tapetes'],['multimidia','Som / multimídia funcionando'],['ar','Ar-condicionado funcionando']];
+const PASSOS=['Carro','Fotos','Avarias','Itens','Assinar'];
+
+/* ---------- utilidades ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,'0');
+const dt=iso=>{if(!iso)return'';const d=new Date(iso);return pad(d.getDate())+'/'+pad(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes())};
+const dtLong=iso=>{if(!iso)return'';const d=new Date(iso);return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()+' '+pad(d.getHours())+':'+pad(d.getMinutes())};
+const hoje=iso=>{const d=new Date(iso),n=new Date();return d.toDateString()===n.toDateString()};
+const fmtPlaca=p=>{p=(p||'').toUpperCase();return p.length===7?p.slice(0,3)+p.slice(3):p};
+const lsGet=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let toastT;
+function toast(msg){const c=$('#camada');let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>{t.hidden=true},3200)}
+
+/* ---------- exemplos (não gravados) ---------- */
+function exemplos(){
+  const h=new Date();const at=(hh,mm)=>{const d=new Date(h);d.setHours(hh,mm,0,0);return d.toISOString()};
+  const tudo=Object.fromEntries(ITENS.map(i=>[i[0],true]));
+  return [
+    {id:'ex-2',exemplo:true,tipo:'entrega',placa:'RTA4E21',modelo:'Onix LTZ 1.0 Turbo 2021',cor:'Prata',km:'48.390',comb:6,cliente:'Cliente de exemplo',vistoriador:'Exemplo',criadoEm:at(14,40),concluidoEm:at(14,57),status:'assinada',fotos:{},itens:Object.assign({},tudo,{manual:false}),obs:'',
+     avarias:[{id:'a1',zona:'pc_d',tipo:'Risco',grav:'Leve',obs:'Risco de 8 cm no canto esquerdo'},{id:'a2',zona:'porta_te',tipo:'Amassado',grav:'Média',obs:'Amassado pequeno perto da maçaneta'},{id:'a3',zona:'paralama_td',tipo:'Risco',grav:'Leve',obs:'Risco que não estava na entrada'}]},
+    {id:'ex-3',exemplo:true,tipo:'entrada',placa:'QPX7B03',modelo:'HB20 Comfort 1.0 2020',cor:'Branco',km:'61.020',comb:3,cliente:'',vistoriador:'Exemplo',criadoEm:at(11,5),concluidoEm:null,status:'rascunho',fotos:{},itens:{},obs:'',avarias:[]},
+    {id:'ex-1',exemplo:true,tipo:'entrada',placa:'RTA4E21',modelo:'Onix LTZ 1.0 Turbo 2021',cor:'Prata',km:'48.210',comb:5,cliente:'Cliente de exemplo',vistoriador:'Exemplo',criadoEm:at(9,12),concluidoEm:at(9,31),status:'assinada',fotos:{},itens:Object.assign({},tudo,{manual:false}),obs:'Veio sem manual.',
+     avarias:[{id:'b1',zona:'pc_d',tipo:'Risco',grav:'Leve',obs:'Risco de 8 cm no canto esquerdo'},{id:'b2',zona:'porta_te',tipo:'Amassado',grav:'Média',obs:'Amassado pequeno perto da maçaneta'}]}
+  ];
+}
+
+/* ---------- estado e armazenamento ---------- */
+const S={lista:[],view:'painel',cur:null,step:0,filtro:'todas',busca:'',sheet:null,modo:'local',carregando:true};
+const CACHE={}; // url -> dataURL para o PDF
+let DB=null,ASSETS=null,DL=null;
+const C=window.claude;
+const cap=n=>C&&C.use?C.use(n).catch(()=>null):Promise.resolve(null);
+
+const IDB={db:null,abrir(){return new Promise(r=>{try{const q=indexedDB.open('patio',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r(true)};q.onerror=()=>r(false)}catch(e){r(false)}})},
+  get(k){return new Promise(r=>{try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)}catch(e){r(null)}})},
+  set(k,v){try{this.db.transaction('kv','readwrite').objectStore('kv').put(v,k)}catch(e){}}};
+async function iniciar(){
+  S.lista=lsGet('patio_vist_v1',[]);
+  if(await IDB.abrir()){const l=await IDB.get('lista');if(Array.isArray(l))S.lista=l}
+  render();
+  cap('assets').then(a=>{ASSETS=a});
+  cap('downloads').then(d=>{DL=d});
+  const limite=setTimeout(()=>{if(S.carregando){S.carregando=false;render()}},10000);
+  cap('db').then(db=>{
+    if(!db){clearTimeout(limite);S.carregando=false;render();return}
+    DB=db;S.modo='db';
+    db.collection('vistorias').onSnapshot(snap=>{
+      clearTimeout(limite);S.carregando=false;
+      S.lista=snap.docs.map(d=>Object.assign({id:d.id},d.data()));
+      if(S.view!=='editar')render();
+    },err=>{clearTimeout(limite);S.carregando=false;S.modo='local';toast('Não deu para ler as vistorias salvas. Trabalhando só neste aparelho.');render()});
+  });
+}
+const filaSalvar={};
+function salvar(v){
+  if(v.exemplo)return;
+  v.atualizadoEm=new Date().toISOString();
+  const i=S.lista.findIndex(x=>x.id===v.id); if(i<0)S.lista.unshift(v); else S.lista[i]=v;
+  clearTimeout(filaSalvar[v.id]);
+  filaSalvar[v.id]=setTimeout(()=>gravar(v),700);
+}
+function limpo(v){
+  const c=JSON.parse(JSON.stringify(v));
+  const ok=f=>f&&f.url&&!String(f.url).startsWith('data:');
+  Object.keys(c.fotos||{}).forEach(k=>{if(!ok(c.fotos[k]))delete c.fotos[k]});
+  (c.avarias||[]).forEach(a=>{if(a.foto&&!ok(a.foto))delete a.foto});
+  return c;
+}
+let gravando=Promise.resolve();
+function gravar(v){
+  if(S.modo==='db'&&DB){
+    const dados=limpo(v);delete dados.id;
+    gravando=gravando.then(()=>DB.collection('vistorias').doc(v.id).set(dados)).catch(e=>{toast('Não salvou na nuvem: '+(e&&e.message||'erro')+'. Tente de novo.')});
+  }else{
+    if(IDB.db)IDB.set('lista',JSON.parse(JSON.stringify(S.lista)));else lsSet('patio_vist_v1',S.lista.map(limpo));
+  }
+}
+function listaVisivel(){return S.lista.length?S.lista:exemplos()}
+function acharEntrada(v){
+  if(v.tipo!=='entrega'||!v.placa)return null;
+  return listaVisivel().filter(x=>x.id!==v.id&&x.tipo==='entrada'&&x.placa===v.placa&&x.criadoEm<v.criadoEm).sort((a,b)=>b.criadoEm.localeCompare(a.criadoEm))[0]||null;
+}
+function novas(v){
+  const e=acharEntrada(v); if(!e)return null;
+  const base=new Set((e.avarias||[]).map(a=>a.zona+'|'+a.tipo));
+  return {entrada:e,ids:new Set((v.avarias||[]).filter(a=>!base.has(a.zona+'|'+a.tipo)).map(a=>a.id))};
+}
+
+/* ---------- desenho do carro (vista de cima, frente para cima) ---------- */
+function svgCarro(v,o){
+  o=o||{};const nv=o.novas||new Set();
+  const por={};(v.avarias||[]).forEach(a=>{(por[a.zona]=por[a.zona]||[]).push(a)});
+  const P=o.pdf;
+  const cor=(z)=>{const l=por[z.k];if(!l)return z.vidro?'#DCE5F7':'#E3E8ED';return l.some(a=>nv.has(a.id))?'#C4321F':'#F6CFC7'};
+  let s=`<svg ${P?'xmlns="http://www.w3.org/2000/svg" width="480" height="968"':''} class="carro${o.int?' int':''}" viewBox="0 0 240 484" role="${o.int?'group':'img'}" aria-label="Desenho do carro visto de cima">`;
+  s+=`<text class="tl" x="120" y="11" text-anchor="middle" ${P?'fill="#506170" font-size="10" font-family="Helvetica"':''}>FRENTE</text>`;
+  s+=`<text class="tl" x="120" y="478" text-anchor="middle" ${P?'fill="#506170" font-size="10" font-family="Helvetica"':''}>TRASEIRA</text>`;
+  s+=`<text class="tl" x="9" y="250" text-anchor="middle" transform="rotate(-90 9 250)" ${P?'fill="#506170" font-size="10" font-family="Helvetica"':''}>ESQ · MOTORISTA</text>`;
+  s+=`<text class="tl" x="231" y="250" text-anchor="middle" transform="rotate(90 231 250)" ${P?'fill="#506170" font-size="10" font-family="Helvetica"':''}>DIR · PASSAGEIRO</text>`;
+  s+=`<rect class="corpo" x="32" y="16" width="176" height="434" rx="48" ${P?'fill="#C8D1DA"':''}/>`;
+  ZONAS.forEach(z=>{
+    const l=por[z.k],cls='z'+(z.vidro?' vidro':'')+(l?(l.some(a=>nv.has(a.id))?' novo':' av'):'');
+    const at=o.int?` tabindex="0" role="button" data-act="zona" data-z="${z.k}" aria-label="${esc(z.n)}${l?', '+l.length+' avaria(s)':''}"`:'';
+    s+=`<rect class="${cls}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="${z.rx}"${at} ${P?`fill="${cor(z)}" stroke="${l?'#C4321F':'#FFFFFF'}" stroke-width="2"`:''}><title>${esc(z.n)}</title></rect>`;
+  });
+  Object.keys(por).forEach(k=>{const z=ZMAP[k];if(!z)return;const cx=z.x+z.w/2,cy=z.y+z.h/2;const n=por[k].length;
+    s+=`<g class="mk" pointer-events="none"><circle cx="${cx}" cy="${cy}" r="10" ${P?'fill="#8E1F10"':''}/><text x="${cx}" y="${cy+4.5}" text-anchor="middle" ${P?'fill="#FFFFFF" font-size="13" font-weight="bold" font-family="Helvetica"':''}>${n}</text></g>`});
+  return s+'</svg>';
+}
+
+/* ---------- foto: comprime e carimba placa, data e ângulo ---------- */
+function carregarImg(src){return new Promise((r,j)=>{const i=new Image();i.onload=()=>r(i);i.onerror=j;i.src=src})}
+async function processarFoto(file,legenda){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await carregarImg(url);const max=1600;const k=Math.min(1,max/Math.max(img.width,img.height));
+    const w=Math.round(img.width*k),h=Math.round(img.height*k);
+    const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(img,0,0,w,h);
+    const bh=Math.max(28,Math.round(w*0.045));g.fillStyle='rgba(8,16,26,.72)';g.fillRect(0,h-bh,w,bh);
+    g.fillStyle='#fff';g.font=`600 ${Math.round(bh*0.5)}px Barlow, Arial, sans-serif`;g.textBaseline='middle';
+    g.fillText(`${fmtPlaca(S.cur.placa)||'SEM PLACA'}  ·  ${dtLong(new Date().toISOString())}  ·  ${legenda}`,Math.round(bh*0.4),h-bh/2);
+    const dataUrl=c.toDataURL('image/jpeg',0.8);
+    if(ASSETS){
+      try{const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',0.82));const up=await ASSETS.upload(blob,{type:'image/jpeg'});CACHE[up.url]=dataUrl;return {id:up.id,url:up.url}}
+      catch(e){toast('Foto ficou só neste aparelho: '+(e&&e.message||'envio falhou'))}
+    }
+    CACHE[dataUrl]=dataUrl;return {id:null,url:dataUrl};
+  }finally{URL.revokeObjectURL(url)}
+}
+
+/* ---------- telas ---------- */
+function render(){
+  const a=$('#app');
+  if(S.view==='painel')a.innerHTML=telaPainel();
+  else if(S.view==='editar')a.innerHTML=telaEditar();
+  else if(S.view==='ver')a.innerHTML=telaVer();
+  $('#camada').innerHTML=S.sheet?folhaAvaria():'';
+  if(S.view==='editar'&&S.step===4)iniciarAssinaturas();
+}
+function placa(p,g){return `<span class="placa${g?' g':''}" aria-label="Placa ${esc(fmtPlaca(p))}"><i>BRASIL</i><b>${esc(fmtPlaca(p)||'-------')}</b></span>`}
+function pillTipo(t){return t==='entrega'?'<span class="pill p-sai">Entrega</span>':'<span class="pill p-ent">Entrada</span>'}
+
+function telaPainel(){
+  const L=listaVisivel(),ex=!S.lista.length;
+  const doDia=L.filter(v=>hoje(v.criadoEm));
+  const avHoje=doDia.reduce((s,v)=>s+(v.avarias||[]).length,0);
+  const pend=L.filter(v=>v.status!=='assinada').length;
+  const novasHoje=doDia.reduce((s,v)=>{const n=novas(v);return s+(n?n.ids.size:0)},0);
+  let f=L;
+  if(S.filtro==='entrada'||S.filtro==='entrega')f=f.filter(v=>v.tipo===S.filtro);
+  if(S.filtro==='pend')f=f.filter(v=>v.status!=='assinada');
+  if(S.busca)f=f.filter(v=>(v.placa||'').includes(S.busca.toUpperCase().replace(/[^A-Z0-9]/g,''))||(v.modelo||'').toLowerCase().includes(S.busca.toLowerCase()));
+  f=f.slice().sort((a,b)=>(b.criadoEm||'').localeCompare(a.criadoEm||''));
+  const chip=(k,n)=>`<button class="chip" data-act="filtro" data-v="${k}" aria-pressed="${S.filtro===k}">${n}</button>`;
+  return `<div class="pilha">
+   <div class="topo"><div><div class="rotulo">Pátio · ${esc(new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'2-digit'}))}</div><h1>Vistorias</h1></div></div>
+   ${ex?`<div class="aviso info">Estas são <b>vistorias de exemplo</b>, para mostrar como fica. Toque em <b>Nova vistoria</b> para fazer a primeira de verdade.</div>`:''}
+   ${S.carregando&&!ex?'<div class="sub">Atualizando…</div>':''}
+   <div class="kpis">
+    <div class="kpi"><b>${doDia.length}</b><span>vistorias hoje</span></div>
+    <div class="kpi ${novasHoje?'alerta':''}"><b>${novasHoje}</b><span>avarias novas na entrega</span></div>
+    <div class="kpi"><b>${pend}</b><span>sem assinatura</span></div>
+   </div>
+   <input class="busca" id="busca" type="search" placeholder="Buscar placa ou modelo" value="${esc(S.busca)}" data-f="busca" aria-label="Buscar placa ou modelo">
+   <div class="linha">${chip('todas','Todas')}${chip('entrada','Entradas')}${chip('entrega','Entregas')}${chip('pend','Pendentes')}</div>
+   <div class="pilha" id="lista">${f.length?f.map(cartaoVist).join(''):'<div class="sub">Nenhuma vistoria com esse filtro.</div>'}</div>
+  </div>
+  <button class="btn pri fab" data-act="nova">+ Nova vistoria</button>`;
+}
+function cartaoVist(v){
+  const n=novas(v),na=(v.avarias||[]).length,nf=Object.keys(v.fotos||{}).length;
+  return `<button class="item-v" data-act="abrir" data-id="${esc(v.id)}">${placa(v.placa)}
+   <div class="meio"><div><b>${esc(v.modelo||'Modelo não informado')}</b></div>
+    <div class="sub">${dt(v.criadoEm)} · ${esc(v.vistoriador||'—')} · ${nf}/${FOTOS.length} fotos</div>
+    <div class="linha" style="margin-top:6px">${pillTipo(v.tipo)}
+     ${na?`<span class="pill p-av">${na} avaria${na>1?'s':''}</span>`:'<span class="pill p-ok">Sem avarias</span>'}
+     ${n&&n.ids.size?`<span class="pill p-av">⚠ ${n.ids.size} nova${n.ids.size>1?'s':''}</span>`:''}
+     ${v.status==='assinada'?'<span class="pill p-ok">Assinada</span>':'<span class="pill p-pend">Pendente</span>'}
+     ${v.exemplo?'<span class="pill p-ex">Exemplo</span>':''}</div></div></button>`;
+}
+
+function telaEditar(){
+  const v=S.cur,st=S.step;
+  const feito=[!!(v.placa&&v.placa.length>=7),Object.keys(v.fotos||{}).length>=FOTOS.length,!!(v.avarias.length||v.semAvaria),ITENS.every(i=>i[0] in (v.itens||{})),v.status==='assinada'];
+  const passos=PASSOS.map((p,i)=>`<button data-act="passo" data-v="${i}" class="${feito[i]?'feito':''}" ${i===st?'aria-current="step"':''}>${p}</button>`).join('');
+  const corpo=[passoCarro,passoFotos,passoAvarias,passoItens,passoAssinar][st](v);
+  return `<div class="topo"><button class="icone" data-act="voltar" aria-label="Voltar ao painel">←</button>
+    <div style="flex:1;min-width:0"><div class="rotulo">${v.tipo==='entrega'?'Entrega ao cliente':'Entrada no pátio'}</div><h2>${esc(fmtPlaca(v.placa)||'Nova vistoria')}</h2></div>
+    ${v.status!=='assinada'&&!v.exemplo?`<button class="icone" data-act="excluir" aria-label="Excluir vistoria" title="Excluir">🗑</button>`:''}</div>
+   <nav class="passos" aria-label="Passos da vistoria">${passos}</nav>
+   <div class="pilha" style="margin-top:12px">${corpo}</div>
+   <div class="rodape"><div class="in">
+    ${st>0?'<button class="btn" data-act="ant">Voltar</button>':''}
+    ${st<4?'<button class="btn pri" data-act="prox">Próximo: '+PASSOS[st+1]+'</button>':`<button class="btn pri" data-act="concluir" ${podeConcluir(v)?'':'disabled'}>Concluir e assinar</button>`}
+   </div></div>
+   ${S.confirmarExcluir?`<div class="veu" data-act="fecharConf"><div class="folha pilha" data-stop="1"><h3>Excluir esta vistoria?</h3><p class="sub">As fotos e avarias registradas somem. Não dá para desfazer.</p><div class="linha"><button class="btn" data-act="fecharConf">Manter</button><button class="btn perigo" data-act="excluirSim">Excluir</button></div></div></div>`:''}`;
+}
+function passoCarro(v){
+  const e=v.tipo==='entrega'?acharEntrada(v):null;
+  const tipo=(k,n)=>`<button class="chip" data-act="tipo" data-v="${k}" aria-pressed="${v.tipo===k}">${n}</button>`;
+  const comb=Array.from({length:8},(_,i)=>`<button data-act="comb" data-v="${i+1}" class="${v.comb>i?'on':''}" aria-label="Combustível ${i+1} de 8"></button>`).join('');
+  return `<div class="cartao pilha">
+    <div class="rotulo">Tipo de vistoria</div><div class="linha">${tipo('entrada','Entrada no pátio')}${tipo('entrega','Entrega ao cliente')}</div>
+    <label class="campo">Placa<input id="f-placa" data-f="placa" value="${esc(v.placa)}" maxlength="8" autocapitalize="characters" autocomplete="off" placeholder="ABC1D23" style="font:700 24px var(--f-disp);letter-spacing:.1em;text-transform:uppercase"></label>
+    ${e?`<div class="aviso info">Entrada de <b>${dt(e.criadoEm)}</b> encontrada, com ${(e.avarias||[]).length} avaria(s). O que aparecer de novo nesta entrega fica destacado em vermelho.</div>`:''}
+    <div class="grade2"><label class="campo">Modelo<input id="f-modelo" data-f="modelo" value="${esc(v.modelo)}" placeholder="Onix LTZ 1.0T 2021"></label>
+    <label class="campo">Cor<input id="f-cor" data-f="cor" value="${esc(v.cor)}" placeholder="Prata"></label>
+    <label class="campo">KM no painel<input id="f-km" data-f="km" value="${esc(v.km)}" inputmode="numeric" placeholder="48.210"></label>
+    <label class="campo">Vistoriador<input id="f-vist" data-f="vistoriador" value="${esc(v.vistoriador)}" placeholder="Seu nome"></label></div>
+    <div><div class="rotulo" style="margin-bottom:6px">Combustível · ${v.comb?v.comb+'/8':'toque no nível'}</div><div class="comb">${comb}</div><div class="linha sub" style="justify-content:space-between;margin-top:2px"><span>Vazio</span><span>Cheio</span></div></div>
+    <label class="campo">Cliente<input id="f-cli" data-f="cliente" value="${esc(v.cliente)}" placeholder="Nome de quem entrega ou recebe"></label>
+  </div>`;
+}
+function passoFotos(v){
+  const n=Object.keys(v.fotos||{}).length;
+  return `<div class="cartao pilha"><div class="linha" style="justify-content:space-between"><h3>Roteiro de fotos</h3><b>${n} de ${FOTOS.length}</b></div>
+   <div class="barra-prog"><i style="width:${n/FOTOS.length*100}%"></i></div>
+   <p class="sub" style="margin:0">Cada foto sai com placa, data e hora gravadas na imagem. Isso é o que vale como prova.</p></div>
+   <div class="fotos">${FOTOS.map(f=>{const ft=(v.fotos||{})[f.k];return `<label class="slot${ft?' tem':''}"><div class="img" style="${ft?`background-image:url('${esc(ft.url)}')`:''}">${ft?'':'📷'}</div>
+     <div class="tx"><b>${ft?'✓ ':''}${esc(f.n)}</b><span class="sub">${esc(f.d)}</span></div>
+     <input type="file" accept="image/*" capture="environment" data-foto="${f.k}" aria-label="Foto: ${esc(f.n)}"></label>`}).join('')}</div>`;
+}
+function passoAvarias(v){
+  const n=novas(v);
+  return `<div class="cartao pilha"><h3>Onde está a avaria?</h3><p class="sub" style="margin:0">Toque na parte do carro. Esquerda é o lado do motorista.</p>
+   <div class="carro-wrap">${svgCarro(v,{int:true,novas:n&&n.ids})}</div>
+   ${n?'<div class="sub">Vermelho cheio = avaria que não estava na entrada de '+dt(n.entrada.criadoEm)+'.</div>':''}
+   </div>
+   <div class="cartao">${v.avarias.length?listaAvarias(v,n,true):`<label class="check" style="border:0"><span>Conferi o carro inteiro e não tem avaria</span><input type="checkbox" data-act="semAvaria" ${v.semAvaria?'checked':''} style="width:24px;height:24px"></label>`}</div>`;
+}
+function listaAvarias(v,n,editar){
+  return (v.avarias||[]).map(a=>{const nova=n&&n.ids.has(a.id);return `<div class="av-li"><div class="th" style="${a.foto?`background-image:url('${esc(a.foto.url)}')`:''}"></div>
+   <div class="meio"><div class="linha"><b>${esc((ZMAP[a.zona]||{}).n||a.zona)}</b>${nova?'<span class="pill p-av">Nova</span>':''}</div>
+   <div class="sub">${esc(a.tipo)} · ${esc(a.grav)}${a.obs?' · '+esc(a.obs):''}</div></div>
+   ${editar?`<button class="icone" data-act="editAv" data-id="${a.id}" aria-label="Editar avaria">✎</button>`:''}</div>`}).join('');
+}
+function passoItens(v){
+  const it=v.itens||{};
+  return `<div class="cartao"><h3 style="margin-bottom:4px">Itens e documentos</h3>${ITENS.map(([k,n])=>`<div class="check"><span>${n}</span><span class="sn" role="group" aria-label="${n}"><button class="s" data-act="item" data-k="${k}" data-v="1" aria-pressed="${it[k]===true}">Tem</button><button class="n" data-act="item" data-k="${k}" data-v="0" aria-pressed="${it[k]===false}">Falta</button></span></div>`).join('')}</div>
+   <div class="cartao"><label class="campo">Observações<textarea id="f-obs" data-f="obs" rows="3" placeholder="Ex.: luz do airbag acesa, cheiro de cigarro">${esc(v.obs)}</textarea></label></div>`;
+}
+function podeConcluir(v){return !!(v.placa&&v.assinCliente&&v.assinVist&&(v.assinNome||'').trim())}
+function passoAssinar(v){
+  const nf=Object.keys(v.fotos||{}).length,n=novas(v),falta=ITENS.filter(i=>(v.itens||{})[i[0]]===false).map(i=>i[1]);
+  const semResp=ITENS.filter(i=>!(i[0] in (v.itens||{}))).length;
+  return `<div class="cartao pilha"><h3>Resumo para o cliente</h3>
+   <div class="dados"><div><span>Fotos</span><b>${nf} de ${FOTOS.length}</b></div><div><span>Avarias</span><b>${v.avarias.length}${n&&n.ids.size?' ('+n.ids.size+' nova'+(n.ids.size>1?'s':'')+')':''}</b></div><div><span>KM</span><b>${esc(v.km||'—')}</b></div><div><span>Combustível</span><b>${v.comb?v.comb+'/8':'—'}</b></div></div>
+   ${falta.length?`<div class="aviso am">Faltando: ${esc(falta.join(', '))}</div>`:''}
+   ${nf<FOTOS.length||semResp?`<div class="aviso am">${nf<FOTOS.length?`Faltam ${FOTOS.length-nf} foto(s) do roteiro. `:''}${semResp?`${semResp} item(ns) sem resposta.`:''}</div>`:''}
+   ${n&&n.ids.size?`<div class="aviso av"><b>${n.ids.size} avaria(s) nova(s)</b> em relação à entrada de ${dt(n.entrada.criadoEm)}. Mostre ao cliente antes de assinar.</div>`:''}
+  </div>
+  <div class="cartao pilha"><h3>Assinatura do cliente</h3><p class="sub" style="margin:0">O cliente confere o resumo e assina com o dedo.</p>
+   <label class="campo">Nome do cliente<input id="f-an" data-f="assinNome" value="${esc(v.assinNome||v.cliente)}"></label>
+   <label class="campo">CPF (opcional)<input id="f-ad" data-f="assinDoc" value="${esc(v.assinDoc)}" inputmode="numeric"></label>
+   <div class="assin-wrap"><canvas class="assin" id="sig-cli" aria-label="Área de assinatura do cliente"></canvas><div class="marca"></div><button class="chip limpar" data-act="limparSig" data-v="cli">Limpar</button></div></div>
+  <div class="cartao pilha"><h3>Assinatura do vistoriador</h3>
+   <div class="assin-wrap"><canvas class="assin" id="sig-vist" aria-label="Área de assinatura do vistoriador"></canvas><div class="marca"></div><button class="chip limpar" data-act="limparSig" data-v="vist">Limpar</button></div></div>
+  ${!podeConcluir(v)?'<div class="sub">Para concluir: placa, nome do cliente e as duas assinaturas.</div>':''}`;
+}
+function folhaAvaria(){
+  const sh=S.sheet,z=ZMAP[sh.zona],a=sh.av;
+  const nesta=S.cur.avarias.filter(x=>x.zona===sh.zona&&x.id!==a.id);
+  const chips=(lista,campo)=>lista.map(t=>`<button class="chip" data-act="avCampo" data-c="${campo}" data-v="${esc(t)}" aria-pressed="${a[campo]===t}">${esc(t)}</button>`).join('');
+  return `<div class="veu" data-act="fecharSheet"><div class="folha pilha" data-stop="1" role="dialog" aria-label="Avaria em ${esc(z.n)}">
+   <div class="linha" style="justify-content:space-between"><div><div class="rotulo">Avaria</div><h2>${esc(z.n)}</h2></div><button class="icone" data-act="fecharSheet" aria-label="Fechar">✕</button></div>
+   ${nesta.length?`<div class="sub">Já registrado aqui: ${nesta.map(x=>esc(x.tipo)).join(', ')}</div>`:''}
+   <div><div class="rotulo" style="margin-bottom:6px">O que é</div><div class="linha">${chips(TIPOS_AV,'tipo')}</div></div>
+   <div><div class="rotulo" style="margin-bottom:6px">Gravidade</div><div class="linha">${chips(GRAV,'grav')}</div></div>
+   <label class="slot${a.foto?' tem':''}" style="min-height:0"><div class="img" style="aspect-ratio:16/9;${a.foto?`background-image:url('${esc(a.foto.url)}')`:''}">${a.foto?'':'📷'}</div><div class="tx"><b>${a.foto?'✓ Foto de perto':'Foto de perto da avaria'}</b></div><input type="file" accept="image/*" capture="environment" data-fotoav="1" aria-label="Foto da avaria"></label>
+   <label class="campo">Detalhe<input id="f-avobs" data-f="avobs" value="${esc(a.obs)}" placeholder="Ex.: risco de 8 cm perto do farol"></label>
+   <div class="linha">${sh.edit?'<button class="btn perigo" data-act="avDel">Remover</button>':''}<button class="btn pri" style="flex:1" data-act="avSalvar" ${a.tipo&&a.grav?'':'disabled'}>Salvar avaria</button></div>
+  </div></div>`;
+}
+function telaVer(){
+  const v=S.cur,n=novas(v),dur=v.concluidoEm?Math.max(1,Math.round((new Date(v.concluidoEm)-new Date(v.criadoEm))/60000)):null;
+  const it=v.itens||{};const falta=ITENS.filter(i=>it[i[0]]===false).map(i=>i[1]);
+  const fotos=FOTOS.filter(f=>(v.fotos||{})[f.k]);
+  return `<div class="topo"><button class="icone" data-act="voltar" aria-label="Voltar ao painel">←</button><div style="flex:1"></div>${v.exemplo?'<span class="pill p-ex">Exemplo</span>':''}</div>
+  <div class="pilha">
+   <div class="cartao pilha"><div class="linha" style="gap:14px">${placa(v.placa,true)}<div style="min-width:0"><h2>${esc(v.modelo||'Modelo não informado')}</h2><div class="linha" style="margin-top:4px">${pillTipo(v.tipo)}${v.status==='assinada'?'<span class="pill p-ok">Assinada</span>':'<span class="pill p-pend">Pendente</span>'}</div></div></div>
+    <div class="dados"><div><span>Início</span><b>${dt(v.criadoEm)}</b></div><div><span>Duração</span><b>${dur?dur+' min':'em andamento'}</b></div><div><span>KM</span><b>${esc(v.km||'—')}</b></div><div><span>Combustível</span><b>${v.comb?v.comb+'/8':'—'}</b></div><div><span>Cor</span><b>${esc(v.cor||'—')}</b></div><div><span>Vistoriador</span><b>${esc(v.vistoriador||'—')}</b></div><div><span>Cliente</span><b>${esc(v.assinNome||v.cliente||'—')}</b></div></div>
+   </div>
+   ${n?`<div class="aviso ${n.ids.size?'av':'info'}">${n.ids.size?`<b>${n.ids.size} avaria(s) nova(s)</b> desde a entrada de ${dt(n.entrada.criadoEm)}.`:`Nenhuma avaria nova desde a entrada de ${dt(n.entrada.criadoEm)}.`} <button class="chip" data-act="abrir" data-id="${esc(n.entrada.id)}" style="margin-left:6px">Ver entrada</button></div>`:''}
+   <div class="cartao pilha"><h3>Avarias</h3><div class="carro-wrap">${svgCarro(v,{novas:n&&n.ids})}</div>${(v.avarias||[]).length?`<div>${listaAvarias(v,n,false)}</div>`:'<div class="sub">Sem avarias registradas.</div>'}</div>
+   <div class="cartao pilha"><h3>Itens</h3><div class="sub">${falta.length?'Faltando: '+esc(falta.join(', ')):'Todos os itens conferidos presentes.'}</div>${v.obs?`<div><span class="rotulo">Observações</span><div>${esc(v.obs)}</div></div>`:''}</div>
+   <div class="cartao pilha"><h3>Fotos · ${fotos.length} de ${FOTOS.length}</h3>${fotos.length?`<div class="galeria">${fotos.map(f=>`<figure><div class="img" style="background-image:url('${esc(v.fotos[f.k].url)}')"></div><figcaption>${esc(f.n)}</figcaption></figure>`).join('')}</div>`:'<div class="sub">Nenhuma foto nesta vistoria.</div>'}</div>
+   ${v.assinCliente?`<div class="cartao pilha"><h3>Assinaturas</h3><div class="grade2"><div><img class="assin-img" src="${v.assinCliente}" alt="Assinatura do cliente"><div class="sub">${esc(v.assinNome)}${v.assinDoc?' · CPF '+esc(v.assinDoc):''}</div></div><div><img class="assin-img" src="${v.assinVist}" alt="Assinatura do vistoriador"><div class="sub">${esc(v.vistoriador||'Vistoriador')}</div></div></div></div>`:''}
+  </div>
+  <div class="rodape"><div class="in">${v.exemplo?'':`<button class="btn" data-act="editar">${v.status==='assinada'?'Corrigir':'Continuar'}</button>`}<button class="btn pri" data-act="pdf">Gerar PDF do laudo</button></div></div>`;
+}
+
+/* ---------- assinatura ---------- */
+function iniciarAssinaturas(){
+  [['sig-cli','assinCliente'],['sig-vist','assinVist']].forEach(([id,campo])=>{
+    const c=document.getElementById(id);if(!c)return;
+    const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=r.width*dpr;c.height=r.height*dpr;
+    const g=c.getContext('2d');g.scale(dpr,dpr);g.lineWidth=2.6;g.lineCap='round';g.lineJoin='round';g.strokeStyle='#0F1E33';
+    if(S.cur[campo])carregarImg(S.cur[campo]).then(i=>g.drawImage(i,0,0,r.width,r.height)).catch(()=>{});
+    let des=false,ult=null;
+    const pt=e=>{const b=c.getBoundingClientRect();return [e.clientX-b.left,e.clientY-b.top]};
+    c.onpointerdown=e=>{des=true;ult=pt(e);c.setPointerCapture(e.pointerId)};
+    c.onpointermove=e=>{if(!des)return;const p=pt(e);g.beginPath();g.moveTo(ult[0],ult[1]);g.lineTo(p[0],p[1]);g.stroke();ult=p};
+    c.onpointerup=c.onpointercancel=()=>{if(!des)return;des=false;
+      const o=document.createElement('canvas');o.width=600;o.height=200;const og=o.getContext('2d');og.fillStyle='#fff';og.fillRect(0,0,600,200);og.drawImage(c,0,0,600,200);
+      S.cur[campo]=o.toDataURL('image/jpeg',0.7);salvar(S.cur);atualizarRodape()};
+  });
+}
+function atualizarRodape(){const b=document.querySelector('[data-act="concluir"]');if(b)b.disabled=!podeConcluir(S.cur)}
+
+/* ---------- PDF ---------- */
+async function paraDataURL(url){
+  if(!url)return null;if(CACHE[url])return CACHE[url];if(url.startsWith('data:'))return url;
+  try{const b=await (await fetch(url)).blob();return await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b)})}catch(e){return null}
+}
+async function svgParaPng(svg){
+  const img=await carregarImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));
+  const c=document.createElement('canvas');c.width=480;c.height=968;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,480,968);g.drawImage(img,0,0,480,968);return c.toDataURL('image/png');
+}
+async function gerarPDF(v){
+  if(!window.jspdf){toast('O gerador de PDF não carregou. Confira a internet e abra de novo.');return}
+  toast('Montando o PDF…');
+  const {jsPDF}=window.jspdf;const d=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,M=14;let y;const n=novas(v);
+  const azul=[23,71,201],cinza=[80,97,112],verm=[196,50,31],tinta=[19,34,48];
+  const cab=()=>{d.setFillColor(...azul);d.rect(0,0,W,22,'F');d.setTextColor(255);d.setFont('helvetica','bold');d.setFontSize(15);
+    d.text('LAUDO DE VISTORIA - '+(v.tipo==='entrega'?'ENTREGA AO CLIENTE':'ENTRADA NO PÁTIO'),M,10);d.setFont('helvetica','normal');d.setFontSize(9);
+    d.text((v.modelo||'')+'  ·  '+dtLong(v.criadoEm),M,16);
+    d.setFillColor(255,255,255);d.roundedRect(W-M-42,4,42,14,1.5,1.5,'F');d.setTextColor(16,20,24);d.setFont('helvetica','bold');d.setFontSize(15);d.text(fmtPlaca(v.placa)||'-',W-M-21,13.6,{align:'center'});d.setTextColor(...tinta)};
+  cab();y=30;
+  const par=(r,val,x,yy)=>{d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(...cinza);d.text(r,x,yy);d.setFont('helvetica','bold');d.setFontSize(10.5);d.setTextColor(...tinta);d.text(String(val||'-'),x,yy+4.6)};
+  const col=(W-2*M)/4;
+  [['Placa',fmtPlaca(v.placa)],['KM',v.km],['Combustível',v.comb?v.comb+'/8':'-'],['Cor',v.cor]].forEach((p,i)=>par(p[0],p[1],M+i*col,y));y+=12;
+  [['Cliente',v.assinNome||v.cliente],['Vistoriador',v.vistoriador],['Início',dtLong(v.criadoEm)],['Conclusão',dtLong(v.concluidoEm)]].forEach((p,i)=>par(p[0],p[1],M+i*col,y));y+=14;
+  d.setDrawColor(210,217,224);d.line(M,y,W-M,y);y+=6;
+  const png=await svgParaPng(svgCarro(v,{pdf:true,novas:n&&n.ids}));
+  d.addImage(png,'PNG',M,y,52,105);
+  let ay=y+2;const ax=M+60;
+  d.setFont('helvetica','bold');d.setFontSize(12);d.text('Avarias ('+(v.avarias||[]).length+')',ax,ay+2);ay+=8;
+  if(n){d.setFontSize(9);d.setFont('helvetica','normal');d.setTextColor(...(n.ids.size?verm:cinza));d.text(n.ids.size?n.ids.size+' avaria(s) nova(s) em relação à entrada de '+dtLong(n.entrada.criadoEm):'Nenhuma avaria nova em relação à entrada de '+dtLong(n.entrada.criadoEm),ax,ay);d.setTextColor(...tinta);ay+=6}
+  if(!(v.avarias||[]).length){d.setFont('helvetica','normal');d.setFontSize(10);d.text('Nenhuma avaria registrada.',ax,ay);ay+=6}
+  (v.avarias||[]).forEach((a,i)=>{const nova=n&&n.ids.has(a.id);d.setFont('helvetica','bold');d.setFontSize(10);d.setTextColor(...(nova?verm:tinta));
+    d.text((i+1)+'. '+((ZMAP[a.zona]||{}).n||a.zona)+(nova?'  [NOVA]':''),ax,ay);ay+=4.5;d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(...cinza);
+    const ls=d.splitTextToSize(a.tipo+' · '+a.grav+(a.obs?' · '+a.obs:''),W-M-ax);d.text(ls,ax,ay);ay+=ls.length*4+2.5;d.setTextColor(...tinta)});
+  y=Math.max(y+110,ay+4);
+  d.setFont('helvetica','bold');d.setFontSize(12);d.text('Itens e documentos',M,y);y+=6;d.setFontSize(9.5);
+  ITENS.forEach(([k,nm],i)=>{const st=(v.itens||{})[k];const x=M+(i%2)*((W-2*M)/2),yy=y+Math.floor(i/2)*5.5;d.setFont('helvetica','bold');d.setTextColor(...(st===false?verm:st===true?[22,121,74]:cinza));d.text(st===true?'TEM':st===false?'FALTA':'N/C',x,yy);d.setFont('helvetica','normal');d.setTextColor(...tinta);d.text(nm,x+13,yy)});
+  y+=Math.ceil(ITENS.length/2)*5.5+3;
+  if(v.obs){d.setFont('helvetica','bold');d.setFontSize(10);d.text('Observações',M,y);y+=4.5;d.setFont('helvetica','normal');d.setFontSize(9.5);const ls=d.splitTextToSize(v.obs,W-2*M);d.text(ls,M,y);y+=ls.length*4.2+3}
+  // assinaturas
+  if(y>235){d.addPage();cab();y=32}
+  y=Math.max(y+4,238);
+  const sig=async(img,nome,sub,x)=>{if(img)d.addImage(img,'JPEG',x,y,80,26.7);d.setDrawColor(...cinza);d.line(x,y+27,x+80,y+27);d.setFontSize(9.5);d.setFont('helvetica','bold');d.text(nome||'-',x,y+31.5);d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(...cinza);d.text(sub,x,y+35.5);d.setTextColor(...tinta)};
+  await sig(v.assinCliente,v.assinNome||v.cliente,'Cliente'+(v.assinDoc?' · CPF '+v.assinDoc:'')+' · declaro que conferi o estado do veículo',M);
+  await sig(v.assinVist,v.vistoriador,'Vistoriador',W-M-80);
+  // fotos
+  const fotos=FOTOS.filter(f=>(v.fotos||{})[f.k]).map(f=>({n:f.n,url:v.fotos[f.k].url})).concat((v.avarias||[]).filter(a=>a.foto).map(a=>({n:'Avaria: '+((ZMAP[a.zona]||{}).n||a.zona),url:a.foto.url})));
+  if(fotos.length){d.addPage();cab();y=30;d.setFont('helvetica','bold');d.setFontSize(12);d.text('Registro fotográfico ('+fotos.length+')',M,y);y+=5;
+    const fw=(W-2*M-8)/3,fh=fw*0.75;let i=0;
+    for(const f of fotos){const du=await paraDataURL(f.url);if(y+fh+8>285){d.addPage();cab();y=30}
+      const x=M+(i%3)*(fw+4);if(du){try{d.addImage(du,'JPEG',x,y,fw,fh)}catch(e){d.rect(x,y,fw,fh)}}else{d.setDrawColor(...cinza);d.rect(x,y,fw,fh)}
+      d.setFont('helvetica','normal');d.setFontSize(8);d.setTextColor(...cinza);d.text(f.n,x,y+fh+3.8);d.setTextColor(...tinta);i++;if(i%3===0)y+=fh+8}}
+  const tp=d.getNumberOfPages();for(let p=1;p<=tp;p++){d.setPage(p);d.setFontSize(7.5);d.setTextColor(...cinza);d.text('Gerado em '+dtLong(new Date().toISOString())+' · fotos com placa, data e hora gravadas no momento da captura · página '+p+' de '+tp,M,292)}
+  const blob=d.output('blob');const nome='vistoria-'+(v.placa||'sem-placa')+'-'+v.tipo+'-'+(v.criadoEm||'').slice(0,10)+'.pdf';
+  if(!DL){try{d.save(nome);toast('PDF baixado.')}catch(e){window.open(URL.createObjectURL(blob),'_blank')}return}
+  try{await DL.save({filename:nome,data:blob});toast('PDF salvo.')}catch(e){toast(e&&e.code==='declined'?'Download cancelado.':'Não deu para salvar o PDF: '+(e&&e.message||'erro'))}
+}
+
+/* ---------- ações ---------- */
+function novaVistoria(){
+  S.cur={id:uid(),tipo:'entrada',placa:'',modelo:'',cor:'',km:'',comb:0,cliente:'',vistoriador:lsGet('patio_vistoriador',''),criadoEm:new Date().toISOString(),concluidoEm:null,status:'rascunho',fotos:{},avarias:[],itens:{},obs:''};
+  S.view='editar';S.step=0;render();scrollTo(0,0);
+}
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;
+  if(t.classList.contains('veu')&&e.target!==t)return;
+  const a=t.dataset.act,v=S.cur;
+  switch(a){
+    case'nova':novaVistoria();break;
+    case'filtro':S.filtro=t.dataset.v;render();break;
+    case'abrir':{const x=listaVisivel().find(y=>y.id===t.dataset.id);if(!x)break;S.cur=JSON.parse(JSON.stringify(x));Object.assign(CACHE,{});S.view=x.status==='assinada'||x.exemplo?'ver':'editar';S.step=0;render();scrollTo(0,0);break}
+    case'voltar':S.view='painel';S.cur=null;S.sheet=null;render();scrollTo(0,0);break;
+    case'editar':S.view='editar';S.step=0;render();break;
+    case'passo':S.step=+t.dataset.v;render();scrollTo(0,0);break;
+    case'prox':S.step=Math.min(4,S.step+1);render();scrollTo(0,0);break;
+    case'ant':S.step=Math.max(0,S.step-1);render();scrollTo(0,0);break;
+    case'tipo':v.tipo=t.dataset.v;salvar(v);render();break;
+    case'comb':v.comb=+t.dataset.v;salvar(v);render();break;
+    case'semAvaria':v.semAvaria=t.checked;salvar(v);break;
+    case'item':v.itens=v.itens||{};v.itens[t.dataset.k]=t.dataset.v==='1';salvar(v);render();break;
+    case'zona':S.sheet={zona:t.dataset.z,av:{id:uid(),zona:t.dataset.z,tipo:'',grav:'',obs:''},edit:false};render();break;
+    case'editAv':{const x=v.avarias.find(y=>y.id===t.dataset.id);S.sheet={zona:x.zona,av:JSON.parse(JSON.stringify(x)),edit:true};render();break}
+    case'avCampo':S.sheet.av[t.dataset.c]=t.dataset.v;render();break;
+    case'fecharSheet':S.sheet=null;render();break;
+    case'avSalvar':{const av=S.sheet.av,i=v.avarias.findIndex(y=>y.id===av.id);if(i<0)v.avarias.push(av);else v.avarias[i]=av;v.semAvaria=false;S.sheet=null;salvar(v);render();toast('Avaria salva em '+ZMAP[av.zona].n+'.');break}
+    case'avDel':v.avarias=v.avarias.filter(y=>y.id!==S.sheet.av.id);S.sheet=null;salvar(v);render();break;
+    case'limparSig':{const c=document.getElementById('sig-'+t.dataset.v);c.getContext('2d').clearRect(0,0,c.width,c.height);v[t.dataset.v==='cli'?'assinCliente':'assinVist']=null;salvar(v);atualizarRodape();break}
+    case'concluir':if(!podeConcluir(v))break;v.status='assinada';v.concluidoEm=new Date().toISOString();salvar(v);S.view='ver';render();scrollTo(0,0);toast('Vistoria concluída e assinada.');break;
+    case'excluir':S.confirmarExcluir=true;render();break;
+    case'fecharConf':S.confirmarExcluir=false;render();break;
+    case'excluirSim':S.confirmarExcluir=false;S.lista=S.lista.filter(x=>x.id!==v.id);
+      if(S.modo==='db'&&DB){clearTimeout(filaSalvar[v.id]);gravando=gravando.then(()=>DB.collection('vistorias').doc(v.id).delete()).catch(()=>toast('Não deu para excluir na nuvem.'))}else if(IDB.db)IDB.set('lista',JSON.parse(JSON.stringify(S.lista)));else lsSet('patio_vist_v1',S.lista.map(limpo));
+      S.view='painel';S.cur=null;render();toast('Vistoria excluída.');break;
+    case'pdf':gerarPDF(v);break;
+  }
+});
+document.addEventListener('keydown',e=>{const t=e.target;if((e.key==='Enter'||e.key===' ')&&t.dataset&&t.dataset.act==='zona'){e.preventDefault();t.click()}if(e.key==='Escape'&&S.sheet){S.sheet=null;render()}});
+document.addEventListener('input',e=>{
+  const t=e.target,f=t.dataset.f;if(!f)return;
+  if(f==='busca'){S.busca=t.value;const pos=t.selectionStart;render();const b=document.getElementById('busca');b.focus();try{b.setSelectionRange(pos,pos)}catch(_){};return}
+  if(f==='avobs'){S.sheet.av.obs=t.value;return}
+  let val=t.value;
+  if(f==='placa'){val=val.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,7);t.value=val}
+  S.cur[f]=val;if(f==='vistoriador')lsSet('patio_vistoriador',val);
+  salvar(S.cur);
+  if(f==='assinNome')atualizarRodape();
+});
+document.addEventListener('change',async e=>{
+  const t=e.target;const file=t.files&&t.files[0];if(!file)return;
+  if(t.dataset.foto){const k=t.dataset.foto,fd=FOTOS.find(x=>x.k===k);toast('Processando foto…');
+    try{const r=await processarFoto(file,fd.n);S.cur.fotos=S.cur.fotos||{};S.cur.fotos[k]=r;salvar(S.cur);render();
+      const prox=FOTOS.find(x=>!S.cur.fotos[x.k]);toast(prox?'Foto salva. Próxima: '+prox.n+'.':'Roteiro de fotos completo.')}catch(err){toast('Não deu para ler essa foto. Tente de novo.')}}
+  if(t.dataset.fotoav){toast('Processando foto…');try{S.sheet.av.foto=await processarFoto(file,'Avaria: '+ZMAP[S.sheet.zona].n);render()}catch(err){toast('Não deu para ler essa foto.')}}
+});
+iniciar();
+</script>
+
+</body></html>
